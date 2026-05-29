@@ -9,6 +9,8 @@ class Settings(BaseModel):
     app_name: str = "AI Support Copilot"
     environment: str = os.getenv("ENVIRONMENT", "dev")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    api_auth_token: str = os.getenv("API_AUTH_TOKEN", "")
+    rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")

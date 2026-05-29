@@ -57,6 +57,7 @@ cp .env.example .env
 
 2. Preencha no `.env`:
 - `OPENAI_API_KEY`
+- `API_AUTH_TOKEN`
 - `ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, `ZENDESK_API_TOKEN` (opcional, mas recomendado)
 
 3. Suba os serviços:
@@ -75,6 +76,7 @@ python scripts/seed_elasticsearch_logs.py
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/ask" \
+  -H "Authorization: Bearer ${API_AUTH_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "{\"question\":\"Há backlog de webhook. Qual causa provável e prioridade?\"}"
 ```
