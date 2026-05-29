@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    container_name: ai-support-copilot
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_EMBEDDINGS_MODEL: ${OPENAI_EMBEDDINGS_MODEL:-text-embedding-3-small}
+      VECTOR_STORE_DIR: /app/data/chroma
+      KNOWLEDGE_BASE_DIR: /app/knowledge_base
+      ZENDESK_SUBDOMAIN: ${ZENDESK_SUBDOMAIN:-}
+      ZENDESK_EMAIL: ${ZENDESK_EMAIL:-}
+      ZENDESK_API_TOKEN: ${ZENDESK_API_TOKEN:-}
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX:-support-logs}
+      ELASTICSEARCH_USERNAME: ${ELASTICSEARCH_USERNAME:-elastic}
+      ELASTICSEARCH_PASSWORD: ${ELASTICSEARCH_PASSWORD:-changeme}
+    volumes:
+      - chroma_data:/app/data/chroma
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: support-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  chroma_data:
+  es_data:

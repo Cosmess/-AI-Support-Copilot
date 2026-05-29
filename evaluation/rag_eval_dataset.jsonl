@@ -1,0 +1,2 @@
+{"question":"Há backlog na fila de webhook, qual próximo passo?","ground_truth":"Verificar consumidor da fila, reiniciar worker com segurança e reprocessar DLQ se necessário."}
+{"question":"Como priorizar incidente com indisponibilidade total?","ground_truth":"Classificar como P1 e tratar imediatamente."}

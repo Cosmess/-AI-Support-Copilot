@@ -1,7 +1,7 @@
 [project]
 name = "ai-support-copilot"
-version = "0.1.0"
-description = "AI Support Copilot with RAG + ReAct agent"
+version = "1.0.0"
+description = "AI Support Copilot with Clean Architecture, RAG, Zendesk and Elasticsearch"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -11,11 +11,17 @@ dependencies = [
   "langchain-openai>=0.2.0",
   "langchain-community>=0.3.0",
   "langchain-text-splitters>=0.3.0",
-  "langgraph>=0.2.0",
   "chromadb>=0.5.5",
+  "elasticsearch>=8.14.0",
+  "requests>=2.32.0",
   "pydantic>=2.8.0",
   "python-dotenv>=1.0.1",
+  "ragas>=0.2.0",
+  "datasets>=2.20.0",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

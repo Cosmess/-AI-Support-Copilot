@@ -1,86 +1,110 @@
 # AI Support Copilot
 
-Copiloto técnico de suporte com **RAG + ReAct Agent + LangGraph**.
-
-Ele recebe perguntas operacionais, busca contexto em base de conhecimento, investiga com tools (tickets/logs/prioridade) e retorna:
-
-1. Diagnóstico provável
-2. Evidências
-3. Próximos passos
+Copiloto de suporte técnico com **Clean Architecture em Python**, **RAG**, integração com **Zendesk**, busca de **logs reais no Elasticsearch** e módulo de **avaliação RAG**.
 
 ## Arquitetura
 
-- **FastAPI**: endpoint `/ask`
-- **RAG**: Markdown -> chunking -> embeddings -> Chroma
-- **Agent ReAct**: ferramentas para investigação simulada
-- **LangGraph**: fluxo `retrieve_context -> investigate_with_agent -> generate_answer`
+Este projeto foi estruturado no modelo **Ports and Adapters (Hexagonal/Clean Architecture)**:
 
-## Estrutura
+- `domain`: entidades e contratos (ports)
+- `application`: casos de uso (regras de orquestração)
+- `infrastructure`: adapters externos (OpenAI, Chroma, Zendesk, Elasticsearch)
+- `presentation`: API FastAPI
 
 ```text
-app/
-  agent.py
-  config.py
-  knowledge_base.py
-  main.py
-  pipeline.py
-  tools.py
-knowledge_base/
-  runbooks.md
-  support_policies.md
+src/support_copilot/
+  domain/
+    entities.py
+    ports.py
+  application/
+    use_cases/
+      answer_support_question.py
+  infrastructure/
+    adapters/
+      kb_chroma.py
+      llm_openai.py
+      logs_elasticsearch.py
+      tickets_zendesk.py
+      fallbacks.py
+    config/
+      settings.py
+  presentation/
+    api/
+      main.py
 ```
 
-## Requisitos
+## Fluxo funcional
 
-- Python 3.11+
-- OPENAI_API_KEY
+1. API recebe a pergunta (`/ask`)
+2. Caso de uso consulta:
+   - documentos via RAG (Chroma),
+   - tickets no Zendesk,
+   - logs no Elasticsearch.
+3. LLM sintetiza:
+   - diagnóstico,
+   - evidências,
+   - próximos passos.
 
-## Como executar
+## Subir com Docker Compose
 
-1. Criar ambiente virtual e instalar dependências:
+1. Copie variáveis:
+
+```bash
+cp .env.example .env
+```
+
+2. Preencha no `.env`:
+- `OPENAI_API_KEY`
+- `ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, `ZENDESK_API_TOKEN` (opcional, mas recomendado)
+
+3. Suba os serviços:
+
+```bash
+docker compose up --build -d
+```
+
+4. (Opcional) Seed de logs reais para teste:
+
+```bash
+python scripts/seed_elasticsearch_logs.py
+```
+
+5. Teste:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/ask" \
+  -H "Content-Type: application/json" \
+  -d "{\"question\":\"Há backlog de webhook. Qual causa provável e prioridade?\"}"
+```
+
+## Avaliação RAG
+
+Dataset inicial: `evaluation/rag_eval_dataset.jsonl`
+
+Rodar avaliação:
+
+```bash
+python evaluation/run_rag_eval.py
+```
+
+Métricas calculadas com RAGAS:
+- `faithfulness`
+- `answer_relevancy`
+- `context_precision`
+
+## Execução local sem Docker
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -e .
+uvicorn support_copilot.presentation.api.main:app --reload --port 8000
 ```
 
-2. Configurar variáveis:
+## Referências de arquitetura e integrações usadas
 
-```bash
-copy .env.example .env
-```
-
-Preencha `OPENAI_API_KEY` no `.env`.
-
-3. Subir API:
-
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-
-4. Testar:
-
-```bash
-curl -X POST "http://127.0.0.1:8000/ask" ^
-  -H "Content-Type: application/json" ^
-  -d "{\"question\":\"Investigue o incidente INC-1003 e diga a prioridade\"}"
-```
-
-## Exemplo de retorno esperado
-
-```json
-{
-  "question": "Investigue o incidente INC-1003 e diga a prioridade",
-  "answer": "Diagnóstico provável ... Evidências ... Próximos passos ...",
-  "retrieved_context": "...",
-  "agent_output": "..."
-}
-```
-
-## Próximas evoluções
-
-- Integrar logs reais (Elastic/OpenSearch)
-- Integrar tickets reais (Jira/Zendesk)
-- Trocar Chroma por pgvector
-- Adicionar testes automatizados e avaliação RAG
+- FastAPI (project structure / bigger applications): https://fastapi.tiangolo.com/tutorial/bigger-applications/
+- Ports & Adapters em Python (Cosmic Python): https://www.cosmicpython.com/
+- Zendesk Support API: https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
+- Elasticsearch Search API: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html
+- RAGAS: https://docs.ragas.io/
