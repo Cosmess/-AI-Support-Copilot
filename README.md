@@ -18,6 +18,32 @@ Documentacao de engenharia: `docs/`.
 3. Tickets e logs sao consultados
 4. LLM gera diagnostico, evidencias e proximos passos
 
+## Diagrama de fluxo (Mermaid)
+
+```mermaid
+flowchart TD
+    U[Usuario] --> A[POST /ask]
+    A --> M{Middleware}
+    M -->|Token invalido| E1[401 Unauthorized]
+    M -->|Rate limit excedido| E2[429 Rate limit exceeded]
+    M -->|OK| UC[Use Case: AnswerSupportQuestion]
+
+    UC --> RAG[KnowledgeRepository - Chroma RAG]
+    UC --> ZD[TicketProvider - Zendesk Search API]
+    UC --> ES[LogProvider - Elasticsearch Search]
+
+    RAG --> CTX[Montagem de contexto consolidado]
+    ZD --> CTX
+    ES --> CTX
+
+    CTX --> PR[Prompt estruturado]
+    PR --> LLM[LLM Provider - OpenAI]
+    LLM --> PARSE[Parser: DIAGNOSTICO / EVIDENCIAS / PROXIMOS_PASSOS]
+
+    PARSE --> RES[Resposta final + evidencias + timings_ms + integration_status]
+    RES --> U
+```
+
 ## Seguranca e operacao
 
 - Auth por token bearer (`API_AUTH_TOKEN`)
