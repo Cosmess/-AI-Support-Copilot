@@ -38,7 +38,7 @@ class AnswerSupportQuestion:
             },
             "retrieved_context": [f"{d.source}: {d.content[:220]}" for d in docs],
             "tickets": [t.__dict__ for t in ticket_events],
-            "logs": [l.__dict__ for l in log_events[:8]],
+            "logs": [log_event.__dict__ for log_event in log_events[:8]],
             "timings_ms": {
                 "rag_retrieval": round((t1 - t0) * 1000, 2),
                 "zendesk_lookup": round((t2 - t1) * 1000, 2),
@@ -55,7 +55,8 @@ class AnswerSupportQuestion:
             f"- {t.ticket_id} | status={t.status} | prioridade={t.priority} | assunto={t.subject}" for t in tickets
         ) or "- sem tickets relacionados"
         logs_part = "\n".join(
-            f"- {l.timestamp} | {l.service} | {l.level} | {l.message[:200]}" for l in logs
+            f"- {log_event.timestamp} | {log_event.service} | {log_event.level} | {log_event.message[:200]}"
+            for log_event in logs
         ) or "- sem logs relevantes"
 
         return "DOCUMENTOS:\n" + docs_part + "\n\nTICKETS:\n" + tickets_part + "\n\nLOGS:\n" + logs_part
