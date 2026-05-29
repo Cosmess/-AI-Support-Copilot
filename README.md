@@ -2,6 +2,8 @@
 
 Copiloto de suporte técnico com **Clean Architecture em Python**, **RAG**, integração com **Zendesk**, busca de **logs reais no Elasticsearch** e módulo de **avaliação RAG**.
 
+Documentação de engenharia: `docs/` (pasta canônica). A pasta `SDD/` permanece apenas como legado/compatibilidade.
+
 ## Arquitetura
 
 Este projeto foi estruturado no modelo **Ports and Adapters (Hexagonal/Clean Architecture)**:
