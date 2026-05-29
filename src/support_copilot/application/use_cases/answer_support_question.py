@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from typing import List
 from time import perf_counter
+from typing import List
+
 from support_copilot.domain.entities import CopilotAnswer
-from support_copilot.domain.ports import KnowledgeRepository, TicketProvider, LogProvider, LLMProvider
+from support_copilot.domain.ports import KnowledgeRepository, LLMProvider, LogProvider, TicketProvider
 
 
 @dataclass
@@ -51,29 +52,20 @@ class AnswerSupportQuestion:
     def _build_context(docs, tickets, logs) -> str:
         docs_part = "\n".join(f"- [{d.source}] {d.content[:600]}" for d in docs) or "- sem documentos relevantes"
         tickets_part = "\n".join(
-            f"- {t.ticket_id} | status={t.status} | prioridade={t.priority} | assunto={t.subject}"
-            for t in tickets
+            f"- {t.ticket_id} | status={t.status} | prioridade={t.priority} | assunto={t.subject}" for t in tickets
         ) or "- sem tickets relacionados"
         logs_part = "\n".join(
-            f"- {l.timestamp} | {l.service} | {l.level} | {l.message[:200]}"
-            for l in logs
+            f"- {l.timestamp} | {l.service} | {l.level} | {l.message[:200]}" for l in logs
         ) or "- sem logs relevantes"
 
-        return (
-            "DOCUMENTOS:\n"
-            f"{docs_part}\n\n"
-            "TICKETS:\n"
-            f"{tickets_part}\n\n"
-            "LOGS:\n"
-            f"{logs_part}"
-        )
+        return "DOCUMENTOS:\n" + docs_part + "\n\nTICKETS:\n" + tickets_part + "\n\nLOGS:\n" + logs_part
 
     @staticmethod
     def _build_prompt(question: str, context: str) -> str:
         return f"""
-Você é um analista de suporte técnico sênior.
+Voce e um analista de suporte tecnico senior.
 Use APENAS o contexto fornecido.
-Se faltar evidência, diga explicitamente.
+Se faltar evidencia, diga explicitamente.
 
 Retorne no formato:
 DIAGNOSTICO:
@@ -94,7 +86,7 @@ CONTEXTO:
 
     @staticmethod
     def _parse_answer(raw: str) -> CopilotAnswer:
-        diagnosis = "Diagnóstico não identificado"
+        diagnosis = "Diagnostico nao identificado"
         evidence: List[str] = []
         next_steps: List[str] = []
 
@@ -121,7 +113,7 @@ CONTEXTO:
 
         return CopilotAnswer(
             diagnosis=diagnosis,
-            evidence=evidence or ["Sem evidências suficientes."],
+            evidence=evidence or ["Sem evidencias suficientes."],
             next_steps=next_steps or ["Coletar mais dados."],
             raw_response=raw,
         )

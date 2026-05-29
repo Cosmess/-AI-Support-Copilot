@@ -10,6 +10,7 @@ class Settings(BaseModel):
     environment: str = os.getenv("ENVIRONMENT", "dev")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     api_auth_token: str = os.getenv("API_AUTH_TOKEN", "")
+    require_auth: bool = os.getenv("REQUIRE_AUTH", "true").lower() == "true"
     rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")

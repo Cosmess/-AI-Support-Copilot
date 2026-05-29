@@ -1,114 +1,77 @@
 # AI Support Copilot
 
-Copiloto de suporte técnico com **Clean Architecture em Python**, **RAG**, integração com **Zendesk**, busca de **logs reais no Elasticsearch** e módulo de **avaliação RAG**.
+Copiloto de suporte tecnico com Clean Architecture, RAG, integracao com Zendesk, consulta de logs no Elasticsearch e avaliacao RAG.
 
-Documentação de engenharia: `docs/` (pasta canônica). A pasta `SDD/` permanece apenas como legado/compatibilidade.
+Documentacao de engenharia: `docs/`.
 
 ## Arquitetura
 
-Este projeto foi estruturado no modelo **Ports and Adapters (Hexagonal/Clean Architecture)**:
-
 - `domain`: entidades e contratos (ports)
-- `application`: casos de uso (regras de orquestração)
+- `application`: casos de uso
 - `infrastructure`: adapters externos (OpenAI, Chroma, Zendesk, Elasticsearch)
 - `presentation`: API FastAPI
 
-```text
-src/support_copilot/
-  domain/
-    entities.py
-    ports.py
-  application/
-    use_cases/
-      answer_support_question.py
-  infrastructure/
-    adapters/
-      kb_chroma.py
-      llm_openai.py
-      logs_elasticsearch.py
-      tickets_zendesk.py
-      fallbacks.py
-    config/
-      settings.py
-  presentation/
-    api/
-      main.py
-```
+## Fluxo
 
-## Fluxo funcional
+1. API recebe pergunta em `/ask`
+2. RAG busca contexto na base interna
+3. Tickets e logs sao consultados
+4. LLM gera diagnostico, evidencias e proximos passos
 
-1. API recebe a pergunta (`/ask`)
-2. Caso de uso consulta:
-   - documentos via RAG (Chroma),
-   - tickets no Zendesk,
-   - logs no Elasticsearch.
-3. LLM sintetiza:
-   - diagnóstico,
-   - evidências,
-   - próximos passos.
+## Seguranca e operacao
+
+- Auth por token bearer (`API_AUTH_TOKEN`)
+- `REQUIRE_AUTH=true` por padrao
+- Rate limit em memoria por IP (`RATE_LIMIT_PER_MINUTE`)
+- Logs estruturados com `request_id`
+- Timings por etapa (RAG, Zendesk, Elastic, LLM)
 
 ## Subir com Docker Compose
 
-1. Copie variáveis:
+1. Copie variaveis:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Preencha no `.env`:
+2. Configure no `.env`:
 - `OPENAI_API_KEY`
 - `API_AUTH_TOKEN`
-- `ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, `ZENDESK_API_TOKEN` (opcional, mas recomendado)
+- `REQUIRE_AUTH=true`
+- `ZENDESK_SUBDOMAIN`, `ZENDESK_EMAIL`, `ZENDESK_API_TOKEN` (opcional)
 
-3. Suba os serviços:
+3. Suba:
 
 ```bash
 docker compose up --build -d
 ```
 
-4. (Opcional) Seed de logs reais para teste:
-
-```bash
-python scripts/seed_elasticsearch_logs.py
-```
-
-5. Teste:
+4. Teste:
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/ask" \
   -H "Authorization: Bearer ${API_AUTH_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"question\":\"Há backlog de webhook. Qual causa provável e prioridade?\"}"
+  -d "{\"question\":\"Ha backlog de webhook. Qual causa provavel e prioridade?\"}"
 ```
 
-## Avaliação RAG
-
-Dataset inicial: `evaluation/rag_eval_dataset.jsonl`
-
-Rodar avaliação:
+## Avaliacao RAG
 
 ```bash
 python evaluation/run_rag_eval.py
 ```
 
-Métricas calculadas com RAGAS:
+Metricas:
 - `faithfulness`
 - `answer_relevancy`
 - `context_precision`
 
-## Execução local sem Docker
+## Desenvolvimento local
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e .
+pip install -e .[dev]
 uvicorn support_copilot.presentation.api.main:app --reload --port 8000
+pytest -q
 ```
-
-## Referências de arquitetura e integrações usadas
-
-- FastAPI (project structure / bigger applications): https://fastapi.tiangolo.com/tutorial/bigger-applications/
-- Ports & Adapters em Python (Cosmic Python): https://www.cosmicpython.com/
-- Zendesk Support API: https://developer.zendesk.com/api-reference/ticketing/tickets/tickets/
-- Elasticsearch Search API: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html
-- RAGAS: https://docs.ragas.io/
