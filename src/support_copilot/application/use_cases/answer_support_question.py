@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+from time import perf_counter
 from support_copilot.domain.entities import CopilotAnswer
 from support_copilot.domain.ports import KnowledgeRepository, TicketProvider, LogProvider, LLMProvider
 
@@ -12,13 +13,18 @@ class AnswerSupportQuestion:
     llm: LLMProvider
 
     def execute(self, question: str) -> dict:
+        t0 = perf_counter()
         docs = self.kb.retrieve(question, k=4)
+        t1 = perf_counter()
         ticket_events = self.tickets.find_by_query(query=question, limit=3)
+        t2 = perf_counter()
         log_events = self.logs.search(query=question, limit=12)
+        t3 = perf_counter()
 
         context = self._build_context(docs, ticket_events, log_events)
         prompt = self._build_prompt(question, context)
         raw = self.llm.answer(prompt)
+        t4 = perf_counter()
         parsed = self._parse_answer(raw)
 
         return {
@@ -32,6 +38,13 @@ class AnswerSupportQuestion:
             "retrieved_context": [f"{d.source}: {d.content[:220]}" for d in docs],
             "tickets": [t.__dict__ for t in ticket_events],
             "logs": [l.__dict__ for l in log_events[:8]],
+            "timings_ms": {
+                "rag_retrieval": round((t1 - t0) * 1000, 2),
+                "zendesk_lookup": round((t2 - t1) * 1000, 2),
+                "log_lookup": round((t3 - t2) * 1000, 2),
+                "llm_generation": round((t4 - t3) * 1000, 2),
+                "total": round((t4 - t0) * 1000, 2),
+            },
         }
 
     @staticmethod

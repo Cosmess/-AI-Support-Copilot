@@ -8,6 +8,7 @@ load_dotenv()
 class Settings(BaseModel):
     app_name: str = "AI Support Copilot"
     environment: str = os.getenv("ENVIRONMENT", "dev")
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
