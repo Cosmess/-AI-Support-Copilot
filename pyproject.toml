@@ -3,7 +3,7 @@ name = "ai-support-copilot"
 version = "1.0.0"
 description = "AI Support Copilot with Clean Architecture, RAG, Zendesk and Elasticsearch"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
   "fastapi>=0.115.0",
   "uvicorn[standard]>=0.30.0",
@@ -19,6 +19,15 @@ dependencies = [
   "ragas>=0.2.0",
   "datasets>=2.20.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
